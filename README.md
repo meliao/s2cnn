@@ -109,3 +109,27 @@ ICML Workshop on Principled Approaches to Deep Learning, 2017.
 [3] Taco S. Cohen, Mario Geiger, Maurice Weiler,
 [Intertwiners between Induced Representations (with applications to the theory of equivariant neural networks)](https://arxiv.org/abs/1803.10743),
 ArXiv preprint 1803.10743, 2018.
+
+
+
+## Owen's Setup
+
+```
+conda create -n s2cnn python=3.6
+conda activate s2cnn
+conda install pytorch torchvision torchaudio cpuonly -c pytorch # Got this command from the pytorch website
+<!-- conda install -c anaconda cupy -->
+conda install -c anaconda cython requests
+conda install -c anaconda scipy  
+conda install -c conda-forge rtree shapely pyembree  
+pip install "trimesh[easy]"
+pip install lie_learn
+```
+
+## Owen's molecule experiment
+
+Datagen: 
+```
+mkdir data
+python datagen.py --data_file data/qm7.mat --output_file data/data.joblib
+```

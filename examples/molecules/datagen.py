@@ -164,7 +164,7 @@ def main():
                         default=10,
                         required=False)
     parser.add_argument("--data_file",
-                        help="file for saving the data output (.gz file)",
+                        help="file for saving the data input (.mat file)",
                         type=str,
                         default="qm7.mat",
                         required=False)
