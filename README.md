@@ -115,15 +115,16 @@ ArXiv preprint 1803.10743, 2018.
 ## Owen's Setup
 
 ```
-conda create -n s2cnn python=3.6
-conda activate s2cnn
-conda install pytorch torchvision torchaudio cpuonly -c pytorch # Got this command from the pytorch website
-<!-- conda install -c anaconda cupy -->
-conda install -c anaconda cython requests
-conda install -c anaconda scipy  
+conda create -n s2cnn_new python=3.8
+conda activate s2cnn_new
+pip install pynvrtc joblib
+conda install -c conda-forge cupy cudatoolkit=11.3
+conda install pytorch -c pytorch # Got this command from the pytorch website
+conda install -c anaconda cython requests scipy  
 conda install -c conda-forge rtree shapely pyembree  
 pip install "trimesh[easy]"
 pip install lie_learn
+python setup.py install
 ```
 
 ## Owen's molecule experiment
@@ -132,4 +133,13 @@ Datagen:
 ```
 mkdir data
 python datagen.py --data_file data/qm7.mat --output_file data/data.joblib
+```
+
+Running the training script
+```
+python run_experiment.py \
+--num_epochs_mlp 2 \
+--num_epochs_s2cnn 1 \
+--log_file logs/test.txt \
+--data_path data/data.joblib
 ```
