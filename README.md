@@ -143,3 +143,23 @@ python run_experiment.py \
 --log_file logs/test.txt \
 --data_path data/data.joblib
 ```
+
+
+## Owen's Timing Experiment
+
+First I have to re-run the datagen script to time how long it takes to process 1433 test samples:
+```
+export OMP_NUM_THREADS=4
+python datagen.py \
+    --data_file data/qm7.mat \
+    --output_file data/inference_time_subset.joblib \
+    --truncate_num 1433
+```
+
+```
+python run_experiment.py \
+--num_epochs_mlp 5 \
+--num_epochs_s2cnn 10 \
+--log_file logs/inference_timing.txt \
+--data_path data/data.joblib
+```

@@ -4,18 +4,18 @@ import scipy.io as spio
 from scipy.spatial import distance as spdist
 import joblib
 import lie_learn.spaces.S2 as S2
-
+from timeit import default_timer
 
 MAX_NUM_ATOMS_PER_MOLECULE = 23
 NUM_ATOM_TYPES = 5
 
 
-def get_raw_data(path):
+def get_raw_data(path: str, truncate_num: int):
     """ load data from matlab file """
     raw = spio.loadmat(path)
-    coordinates = raw["R"]
-    charges = raw["Z"]
-    energies = raw["T"]
+    coordinates = raw["R"][:truncate_num]
+    charges = raw["Z"][:truncate_num]
+    energies = raw["T"][:truncate_num]
     strat_ids = raw["P"]
     return coordinates, charges, energies, strat_ids
 
@@ -173,12 +173,24 @@ def main():
                         type=str,
                         default="data.joblib",
                         required=False)
+    parser.add_argument('--truncate_num',
+                        help="Only process this many samples",
+                        type=int,
+                        required=False)
+
+    
 
     args = parser.parse_args()
 
-    raw_data = get_raw_data(args.data_file)
+    raw_data = get_raw_data(args.data_file, args.truncate_num)
+
+    precompute_time_start = default_timer()
 
     data = generate_dataset(*raw_data, args.bandwidth)
+
+    precompute_time = default_timer() - precompute_time_start
+
+    print("Total precomputation time: {}, seconds per sample: {}".format(precompute_time, precompute_time / args.truncate_num))
 
     print("save to file")
     joblib.dump(data, args.output_file)

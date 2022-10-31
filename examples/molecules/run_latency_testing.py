@@ -1,5 +1,6 @@
 # pylint: disable=E1101,R,C
 import argparse
+import pickle
 import logging
 from typing import Dict
 import torch
@@ -191,6 +192,39 @@ def train_s2cnn(mlp, s2cnn, data, train_batches, test_batches, num_epochs,
             epoch+1, num_epochs, train_loss, test_loss))
     return train_loss, test_loss
 
+
+def evaluate_prediction_latency(mlp: BaselineRegressor,
+                                s2cnn: S2CNNRegressor,
+                                data: Dict,
+                                test_batches: IndexBatcher,
+                                n_latency_runs: int,
+                                latency_out_fp: str) -> None:
+
+    logging.info("TEST_IDXES.indices shape: %s", test_batches.indices.shape)
+
+    s2cnn.eval()
+    mlp.eval()
+
+    inference_times = []
+    for i in range(n_latency_runs):
+        for j in test_batches.indices:
+            j_arr = np.array([j])
+            # logging.info("J_ARR.shape: %s", j_arr.shape)
+            inf_time_start = default_timer()
+            pred = inference_batch_s2cnn(mlp, s2cnn, data, j_arr)
+            inf_time = default_timer() - inf_time_start
+
+            inference_times.append(inf_time)
+    times_arr = np.array(inference_times[1:])
+
+    logging.info("Completed latency experiment with median: %f, min: %f, max: %f",
+                        np.median(times_arr),
+                        times_arr.min(),
+                        times_arr.max())
+    with open(latency_out_fp, 'wb') as f:
+        pickle.dump(times_arr, f)
+    
+
 def evaluate_test_MAE(mlp_model: BaselineRegressor, 
                         s2cnn_model: S2CNNRegressor, 
                         data: Dict, 
@@ -269,6 +303,8 @@ def main():
                         type=int,
                         default=10)
     parser.add_argument('--log_file', type=str)
+    parser.add_argument('--n_latency_runs', type=int, default=5)
+    parser.add_argument('--latency_results_fp', type=str)
 
     args = parser.parse_args()
     fmt = "%(asctime)s:s2cnn: %(levelname)s - %(message)s"
@@ -294,6 +330,7 @@ def main():
     if torch.cuda.is_available():
         for model in [mlp, s2cnn]:
             model.cuda(args.device_id)
+
 
     logging.info("training baseline MLP model")
     logging.info("mlp #params: {}".format(count_params(mlp)))
@@ -325,6 +362,13 @@ def main():
     logging.info("Total training time %f", t2 - t1)
     evaluate_test_MAE(mlp, s2cnn, data, test_batches, args.device_id)
 
+
+
+    ########################################################################
+    ### EVALUATE PREDICTION LATENCY
+    logging.info("")
+    logging.info("Evaluating Prediction Latency")
+    evaluate_prediction_latency(mlp, s2cnn, data, test_batches, args.n_latency_runs, args.latency_results_fp)
 if __name__ == '__main__':
 
     main()
